@@ -1,5 +1,6 @@
-CopyFrom
-CopyFromMulti
+CopyFrom/new-zealand-latest-free.shp_20200722.zip
+CopyFromMulti/file_geodatabase_copyfrom.gdb
 CopyTo
 Backup_*
 *logfile*
+/logs2/
