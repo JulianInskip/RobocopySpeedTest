@@ -1,1 +1,1 @@
-"Hostname","File name","Log file","Datetime","Date","Time","Source directory","Target directory","Files copied","No. of directories","No. of files","File size","File units","Total seconds","Time taken","MB per minute"
+"Hostname","Copy Type","Log file","Datetime","Date","Time","Source directory","Target directory","Files copied","No. of directories","No. of files","File size","File units","Total seconds","Time taken","MB per minute","Delete time seconds","Delete time"

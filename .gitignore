@@ -4,7 +4,9 @@ CopyTo
 Backup_*
 *logfile*
 /logs2/
+*.bat
 *.log
 /logs/
 /logs/RobocopySpeedTest.csv
 /test_batch.bat
+/_batch_files/
