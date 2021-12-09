@@ -12,6 +12,9 @@ import time
 # DONE: Create new logs directory if it does not exist
 # DONE: Create new csv file if it does not exist
 # DONE: Ensure script can run using python 2.x
+# DONE: Use parameter for to_dir
+# DONE: Look at option to use multiple to_dir inputs
+# DONE: Change to_dir_name to include hostname
 
 
 def hms_string(sec_elapsed):
@@ -45,7 +48,6 @@ def hms_string(sec_elapsed):
 
 
 def transfer_log_info(log_file_name, in_copy_type, in_cleanup_time):
-    hostname = socket.gethostname()
     print("Transferring logs for {}".format(log_file_name))
     print("Hostname: {}".format(hostname))
 
@@ -57,6 +59,8 @@ def transfer_log_info(log_file_name, in_copy_type, in_cleanup_time):
     dst_dir = ""
     no_of_dirs = ""
     no_of_files = ""
+    copy_size = ""
+    copy_units = ""
     files_copied = ""
     total_secs = ""
     total_time_format = ""
@@ -114,7 +118,7 @@ def transfer_log_info(log_file_name, in_copy_type, in_cleanup_time):
                 print("  {} MegaBytes/min".format(mb_per_sec))
     with open(csv_log_file, "a") as csv_file:
         csv_file.write("\"{}\",\"{}\",\"{}\",\"{}\",\"{}\",\"{}\",\"{}\",\"{}\",\"{}\","
-                       "\"{}\",\"{}\",\"{}\",\"{}\",\"{}\",\"{}\",\"{}\",\"{}\",\"{}\"\"\n".format(
+                       "\"{}\",\"{}\",\"{}\",\"{}\",\"{}\",\"{}\",\"{}\",\"{}\",\"{}\"\n".format(
                             hostname, in_copy_type, log_file_name, date_time_obj,
                             date_obj, time_obj, src_dir, dst_dir, files_copied,
                             no_of_dirs, no_of_files, copy_size, copy_units, total_secs,
@@ -143,30 +147,6 @@ def run_robocopy():
 def cleanup(in_from_dir, in_from_file):
     print("Cleaning up copied files...")
     start_time_cleanup = time.time()
-    # if in_from_file != "":
-    #     file_path = os.path.join(to_dir, in_from_file)
-    #     print("Removing {}".format(file_path))
-    #     if os.path.isfile(file_path):
-    #         print("Deleting {} file".format(file_path))
-    #         os.remove(file_path)
-    # else:
-    #     src_file_list = []
-    #     for dirname, dirnames, filenames in os.walk(in_from_dir):
-    #         if dirname != in_from_dir:
-    #             src_file_list.append(dirname)
-    #         for filename in filenames:
-    #             src_file_list.append(os.path.join(dirname, filename))
-    #     new_file_list = [a.replace(in_from_dir, to_dir) for a in src_file_list]
-    #     for new_file in new_file_list:
-    #         # print("Checking {} file".format(new_file))
-    #         if os.path.isdir(new_file):
-    #             print("  Deleting {} directory".format(new_file))
-    #             shutil.rmtree(new_file)
-    #         elif os.path.isfile(new_file):
-    #             print("  Deleting {} file".format(new_file))
-    #             os.remove(new_file)
-    #
-    #     print()
 
     if os.path.isdir(copy_to_dir):
         print("  Deleting {} directory".format(copy_to_dir))
@@ -194,14 +174,17 @@ def create_csv_logfile():
 
 if __name__ == "__main__":
     """
-      Variables:
+      Variables/Parameters:
         - to_dir: Directory to which the single and multiple files are copied.
                   A new directory called 'CopyTo' (to_dir_name) is created and the file(s) 
                   are copied here. This new directory is then deleted and time
                   taken to delete is recorded in the csv log file.
     """
 
-    to_dir = r"\\2108-jxi\c$\GISData\Scripts\RobocopySpeedTest"
+    if len(sys.argv) == 1:
+        to_dir_list = r"C:\GISData\AC-AucklandCouncil\DesktopPerformanceIssues\tests_AC_DesktopPerformanceIssues\RobocopySpeedTest\CopyTo - Copy;C:\GISData\AC-AucklandCouncil\DesktopPerformanceIssues\tests_AC_DesktopPerformanceIssues\RobocopySpeedTest\CopyTo - Copy (2)".split(";")
+    else:
+        to_dir_list = sys.argv[1].split(";")
 
     # #######################################################################################
     script_name = os.path.basename(sys.argv[0]).split(".")[0]
@@ -209,15 +192,17 @@ if __name__ == "__main__":
     config_list = [[r"{}\CopyFrom".format(home_dir), "new-zealand-latest-free.shp_20200722.zip"],
                    [r"{}\CopyFromMulti".format(home_dir), ""]]
     csv_log_file = r"{}\logs2\RobocopySpeedTest.csv".format(home_dir)
-    to_dir_name = "CopyTo"
-    copy_to_dir = os.path.join(to_dir, to_dir_name)
+    hostname = socket.gethostname()
+    to_dir_name = "CopyTo_{}".format(hostname)
 
     log_file_path = create_csv_logfile()
 
-    now = datetime.now()
-    time_now = now.strftime("%Y%m%d_%H%M%S")
-    run_robocopy()
-    # # transfer_log_info(sys.argv)
+    for to_dir in to_dir_list:
+        now = datetime.now()
+        time_now = now.strftime("%Y%m%d_%H%M%S")
+
+        copy_to_dir = os.path.join(to_dir, to_dir_name)
+        run_robocopy()
 
     sleep_time = 10
     print("Waiting for {} seconds before closing...".format(sleep_time))
