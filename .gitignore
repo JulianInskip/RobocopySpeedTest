@@ -1,12 +1,7 @@
-CopyFrom/new-zealand-latest-free.shp_20200722.zip
-CopyFromMulti/file_geodatabase_copyfrom.gdb
-CopyTo
-Backup_*
-*logfile*
+/_batch_files/
+/CopyFrom/
+/CopyFromMulti/
+/CopyTo/
 /logs2/
 *.bat
 *.log
-/logs/
-/logs/RobocopySpeedTest.csv
-/test_batch.bat
-/_batch_files/

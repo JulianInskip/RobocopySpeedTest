@@ -11,6 +11,7 @@ import time
 # DONE: Add timing for deleting file/directories
 # DONE: Create new logs directory if it does not exist
 # DONE: Create new csv file if it does not exist
+# DONE: Ensure script can run using python 2.x
 
 
 def hms_string(sec_elapsed):
@@ -45,8 +46,8 @@ def hms_string(sec_elapsed):
 
 def transfer_log_info(log_file_name, in_copy_type, in_cleanup_time):
     hostname = socket.gethostname()
-    print(f"Transferring logs for {log_file_name}")
-    print(f"Hostname: {hostname}")
+    print("Transferring logs for {}".format(log_file_name))
+    print("Hostname: {}".format(hostname))
 
     date_time_obj = datetime.strftime(datetime.strptime(log_file_name[-19:-4], "%Y%m%d_%H%M%S"), "%d/%m/%Y %H:%M:%S")
     date_obj = datetime.strftime(datetime.strptime(log_file_name[-19:-4], "%Y%m%d_%H%M%S"), "%d/%m/%Y")
@@ -67,10 +68,10 @@ def transfer_log_info(log_file_name, in_copy_type, in_cleanup_time):
         for log_row in lines:
             if "Source :" in log_row:
                 src_dir = log_row.replace("Source :", "").strip()
-                print(f"  Source directory: {src_dir}")
+                print("  Source directory: {}".format(src_dir))
             elif "Dest :" in log_row:
                 dst_dir = log_row.replace("Dest :", "").strip()
-                print(f"  Target directory: {dst_dir}")
+                print("  Target directory: {}".format(dst_dir))
             elif "Files :" in log_row:
                 if file_text_count == 0:
                     files_copied_ = list(filter(None, log_row.replace("Files :", "").split(" ")))
@@ -79,14 +80,14 @@ def transfer_log_info(log_file_name, in_copy_type, in_cleanup_time):
                     else:
                         files_copied = files_copied_[0]
                     file_text_count += 1
-                    print(f"  Files copied: {files_copied}")
+                    print("  Files copied: {}".format(files_copied))
                 elif file_text_count == 1:
                     no_of_files = list(filter(None, log_row.replace("Files :", "").split(" ")))[0]
                     file_text_count += 1
-                    print(f"  No. of files: {no_of_files}")
+                    print("  No. of files: {}".format(no_of_files))
             elif "Dirs :" in log_row:
-                no_of_dirs = list(filter(None, log_row.replace("Dirs :", "").split(" ")))[0]
-                print(f"  No. of directories: {no_of_dirs}")
+                no_of_dirs = int(list(filter(None, log_row.replace("Dirs :", "").split(" ")))[0])-1
+                print("  No. of directories: {}".format(no_of_dirs))
             elif "Bytes :" in log_row:
                 copy_size = list(filter(None, log_row.replace("Bytes :", "").split(" ")))[0]
                 copy_units_ = list(filter(None, log_row.replace("Bytes :", "").split(" ")))[1]
@@ -95,9 +96,9 @@ def transfer_log_info(log_file_name, in_copy_type, in_cleanup_time):
                 elif copy_units_.lower() == "g":
                     copy_units = "GB"
                 else:
-                    copy_units == "Unknown"
-                print(f"  File size: {copy_size}")
-                print(f"  File size units: {copy_units}")
+                    copy_units = "Unknown"
+                print("  File size: {}".format(copy_size))
+                print("  File size units: {}".format(copy_units))
             elif "Times :" in log_row:
                 times = list(filter(None, log_row.replace("Times :", "").split(" ")))[0]
                 hours = int(times.split(":")[0])
@@ -107,12 +108,17 @@ def transfer_log_info(log_file_name, in_copy_type, in_cleanup_time):
                 mins_in_secs = mins * 60
                 total_secs = hours_in_secs + mins_in_secs + secs
                 total_time_format = hms_string(total_secs).strip()
-                print(f"  Total Elapsed time = {total_time_format}")
+                print("  Total Elapsed time = {}".format(total_time_format))
             elif "MegaBytes/min" in log_row:
                 mb_per_sec = float(log_row.replace("Speed :", "").replace("MegaBytes/min.", ""))
-                print(f"  {mb_per_sec} MegaBytes/min")
+                print("  {} MegaBytes/min".format(mb_per_sec))
     with open(csv_log_file, "a") as csv_file:
-        csv_file.write(f"\"{hostname}\",\"{in_copy_type}\",\"{log_file_name}\",\"{date_time_obj}\",\"{date_obj}\",\"{time_obj}\",\"{src_dir}\",\"{dst_dir}\",\"{files_copied}\",\"{no_of_dirs}\",\"{no_of_files}\",\"{copy_size}\",\"{copy_units}\",\"{total_secs}\",\"{total_time_format}\",\"{mb_per_sec}\",\"{in_cleanup_time}\",\"{hms_string(in_cleanup_time)}\"\n")
+        csv_file.write("\"{}\",\"{}\",\"{}\",\"{}\",\"{}\",\"{}\",\"{}\",\"{}\",\"{}\","
+                       "\"{}\",\"{}\",\"{}\",\"{}\",\"{}\",\"{}\",\"{}\",\"{}\",\"{}\"\"\n".format(
+                            hostname, in_copy_type, log_file_name, date_time_obj,
+                            date_obj, time_obj, src_dir, dst_dir, files_copied,
+                            no_of_dirs, no_of_files, copy_size, copy_units, total_secs,
+                            total_time_format, mb_per_sec, in_cleanup_time, hms_string(in_cleanup_time)))
 
 
 def run_robocopy():
@@ -124,7 +130,8 @@ def run_robocopy():
         if from_file == "":
             logfile = r"{}\{}_{}_log_{}.log".format(log_file_path, script_name, "multiple", time_now)
             copy_type = "Multiple Files"
-            call(["robocopy", from_dir, copy_to_dir, "/S", "/E", "/IS", "/IT", "/NP", "/NFL", "/LOG:{}".format(logfile)])
+            call(
+                ["robocopy", from_dir, copy_to_dir, "/S", "/E", "/IS", "/IT", "/NP", "/NFL", "/LOG:{}".format(logfile)])
         else:
             logfile = r"{}\{}_{}_log_{}.log".format(log_file_path, script_name, "single", time_now)
             copy_type = "Single File"
@@ -180,7 +187,8 @@ def create_csv_logfile():
     if not os.path.isfile(csv_log_file):
         print("Creating CSV log file: {}".format(csv_log_file))
         with open(csv_log_file, "w") as csv_file:
-            csv_file.write("\"Hostname\",\"Copy Type\",\"Log file\",\"Datetime\",\"Date\",\"Time\",\"Source directory\",\"Target directory\",\"Files copied\",\"No. of directories\",\"No. of files\",\"File size\",\"File units\",\"Total seconds\",\"Time taken\",\"MB per minute\",\"Delete time seconds\",\"Delete time\"\n")
+            csv_file.write(
+                "\"Hostname\",\"Copy Type\",\"Log file\",\"Datetime\",\"Date\",\"Time\",\"Source directory\",\"Target directory\",\"Files copied\",\"No. of directories\",\"No. of files\",\"File size\",\"File units\",\"Total seconds\",\"Time taken\",\"MB per minute\",\"Delete time seconds\",\"Delete time\"\n")
     return out_log_file_path
 
 
@@ -192,6 +200,7 @@ if __name__ == "__main__":
                   are copied here. This new directory is then deleted and time
                   taken to delete is recorded in the csv log file.
     """
+
     to_dir = r"\\2108-jxi\c$\GISData\Scripts\RobocopySpeedTest"
 
     # #######################################################################################
@@ -199,10 +208,10 @@ if __name__ == "__main__":
     home_dir = os.path.dirname(sys.argv[0]).replace("/", "\\")
     config_list = [[r"{}\CopyFrom".format(home_dir), "new-zealand-latest-free.shp_20200722.zip"],
                    [r"{}\CopyFromMulti".format(home_dir), ""]]
-    csv_log_file = r"{}\logs\RobocopySpeedTest.csv".format(home_dir)
+    csv_log_file = r"{}\logs2\RobocopySpeedTest.csv".format(home_dir)
     to_dir_name = "CopyTo"
     copy_to_dir = os.path.join(to_dir, to_dir_name)
-    
+
     log_file_path = create_csv_logfile()
 
     now = datetime.now()
@@ -210,5 +219,6 @@ if __name__ == "__main__":
     run_robocopy()
     # # transfer_log_info(sys.argv)
 
-    print("Waiting for 10 seconds before closing...")
-    time.sleep(10)
+    sleep_time = 10
+    print("Waiting for {} seconds before closing...".format(sleep_time))
+    time.sleep(sleep_time)
