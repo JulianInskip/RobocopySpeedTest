@@ -3,5 +3,5 @@
 /CopyFromMulti/
 /CopyTo/
 /logs2/
-*.bat
+/SetupTaskSchedule/
 *.log
